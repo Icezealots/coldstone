@@ -1,0 +1,132 @@
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import (
+    MessageEvent, TextMessage, PostbackEvent, TextSendMessage, TemplateSendMessage, 
+    CarouselTemplate, CarouselColumn, LocationSendMessage, URITemplateAction, StickerSendMessage, ImageSendMessage
+)
+from urllib.parse import parse_qsl
+import os
+
+app = Flask(__name__)
+
+line_bot_api = LineBotApi(os.environ.get('Channel_Access_Token'))
+handler = WebhookHandler(os.environ.get('Channel_Secret'))
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+
+    return 'OK'
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    mtext = event.message.text
+    if mtext == '台北據點':
+        try:
+            message = LocationSendMessage(
+                title='酷聖石冰淇淋信義門市',
+                address='110台北市信義區忠孝東路五段8號 B2',
+                latitude=25.033679,
+                longitude=121.565092
+            )
+            line_bot_api.reply_message(event.reply_token, message)
+        except Exception as e:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+    elif mtext == '推薦品項':
+        sendCarousel(event)
+    elif mtext == '新品介紹':
+        try:
+            messages = [
+                StickerSendMessage(package_id='1', sticker_id='2'),
+                TextSendMessage(text="酷黑女王!\n\n口味\n極濃黑牛奶冰淇淋\n配料\n草莓+覆盆莓+小麻糬"),
+                ImageSendMessage(original_content_url="https://i.imgur.com/H253Dss.jpeg", preview_image_url="https://i.imgur.com/H253Dss.jpeg")
+            ]
+            line_bot_api.reply_message(event.reply_token, messages)
+        except Exception as e:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    backdata = dict(parse_qsl(event.postback.data))  # 取得 Postback 資料
+    if backdata.get('action') == 'buy':
+        sendBack_buy(event, backdata)
+    elif backdata.get('action') == 'sell':
+        sendBack_sell(event, backdata)
+
+def sendCarousel(event):
+    try:
+        message = TemplateSendMessage(
+            alt_text='轉盤樣板',
+            template=CarouselTemplate(
+                columns=[
+                    CarouselColumn(
+                        thumbnail_image_url='https://i.imgur.com/u0O4lst.jpeg',
+                        text='酷黑女王',
+                        actions=[
+                            URITemplateAction(
+                                label='產品連結',
+                                uri='https://www.coldstone.com.tw/product/product_detail.aspx?p_id=IC130'
+                            )
+                        ]
+                    ),
+                    CarouselColumn(
+                        thumbnail_image_url='https://i.imgur.com/IvsRhW6.jpeg',
+                        text='酷黑法師',
+                        actions=[
+                            URITemplateAction(
+                                label='產品連結',
+                                uri='https://www.coldstone.com.tw/product/product_detail.aspx?p_id=IC131'
+                            )
+                        ]
+                    ),
+                    CarouselColumn(
+                        thumbnail_image_url='https://i.imgur.com/H7SacYz.jpeg',
+                        text='酷黑鬥士',
+                        actions=[
+                            URITemplateAction(
+                                label='產品連結',
+                                uri='https://www.coldstone.com.tw/product/product_detail.aspx?p_id=IC132'
+                            )
+                        ]
+                    ),
+                    CarouselColumn(
+                        thumbnail_image_url='https://i.imgur.com/EnQE5j9.jpeg',
+                        text='焙香蜜QQ',
+                        actions=[
+                            URITemplateAction(
+                                label='產品連結',
+                                uri='https://www.coldstone.com.tw/product/product_detail.aspx?p_id=IC129'
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
+        line_bot_api.reply_message(event.reply_token, message)
+    except Exception as e:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+
+def sendBack_buy(event, backdata):
+    try:
+        text1 = f"感謝您購買披薩，我們將盡快為您製作。\n(action的值為: {backdata.get('action')})"
+        message = TextSendMessage(text=text1)
+        line_bot_api.reply_message(event.reply_token, message)
+    except Exception as e:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+
+def sendBack_sell(event, backdata):
+    try:
+        message = TextSendMessage(text=f"點選的是賣: {backdata.get('item')}")
+        line_bot_api.reply_message(event.reply_token, message)
+    except Exception as e:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+
+if __name__ == "__main__":
+    app.run()
