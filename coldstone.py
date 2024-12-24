@@ -8,6 +8,8 @@ from linebot.models import (
 from urllib.parse import parse_qsl
 import os
 
+liffid = '2006620225-p5Ae3ykb'
+
 app = Flask(__name__)
 
 line_bot_api = LineBotApi(os.environ.get('Channel_Access_Token'))
@@ -30,29 +32,20 @@ def handle_message(event):
     mtext = event.message.text
     if mtext == '台北據點':
         try:
-            message = LocationSendMessage(
-                title='酷聖石冰淇淋信義門市',
-                address='110台北市信義區忠孝東路五段8號 B2',
-                latitude=25.033679,
-                longitude=121.565092
-            )
+            message = TemplateSendMessage(
+                alt_text = "商品訂購",
+                template = ButtonsTemplate(
+                    thumbnail_image_url='https://i.imgur.com/H253Dss.jpg',
+                    title='商品訂購',
+                    text='歡迎訂購coldstone冰品。',
+                    actions=[
+                        URITemplateAction(label='商品訂購', uri='https://liff.line.me/' + liffid)  #開啟LIFF讓使用者輸入訂房資料
+                    ]
+                )
             line_bot_api.reply_message(event.reply_token, message)
         except Exception as e:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
-    elif mtext == '推薦品項':
-        sendCarousel(event)
-    elif mtext == '新品介紹':
-        try:
-            messages = [
-                StickerSendMessage(package_id='1', sticker_id='2'),
-                TextSendMessage(text="酷黑女王!\n\n口味\n極濃黑牛奶冰淇淋\n配料\n草莓+覆盆莓+小麻糬"),
-                ImageSendMessage(original_content_url="https://i.imgur.com/H253Dss.jpeg", preview_image_url="https://i.imgur.com/H253Dss.jpeg")
-            ]
-            line_bot_api.reply_message(event.reply_token, messages)
-        except Exception as e:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
 
-@handler.add(PostbackEvent)
 def handle_postback(event):
     backdata = dict(parse_qsl(event.postback.data))  # 取得 Postback 資料
     if backdata.get('action') == 'buy':
