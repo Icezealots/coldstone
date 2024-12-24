@@ -42,6 +42,7 @@ def handle_message(event):
                         URITemplateAction(label='商品訂購', uri='https://liff.line.me/' + liffid)  #開啟LIFF讓使用者輸入訂房資料
                     ]
                 )
+            )
             line_bot_api.reply_message(event.reply_token, message)
         except Exception as e:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
