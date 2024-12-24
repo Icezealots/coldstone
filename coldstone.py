@@ -3,7 +3,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, PostbackEvent, TextSendMessage, TemplateSendMessage, 
-    CarouselTemplate, CarouselColumn, LocationSendMessage, URITemplateAction, StickerSendMessage, ImageSendMessage
+    CarouselTemplate, CarouselColumn, LocationSendMessage, URITemplateAction, StickerSendMessage, ButtonsTemplate, ImageSendMessage
 )
 from urllib.parse import parse_qsl
 import os
