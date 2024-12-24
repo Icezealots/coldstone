@@ -30,7 +30,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     mtext = event.message.text
-    if mtext == '台北據點':
+    if mtext == '商品訂購':
         try:
             message = TemplateSendMessage(
                 alt_text = "商品訂購",
