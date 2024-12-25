@@ -28,6 +28,7 @@ def callback():
     return 'OK'
 
 @handler.add(MessageEvent, message=TextMessage)
+@handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     mtext = event.message.text
     if mtext == '商品訂購':
@@ -46,6 +47,20 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, message)
         except Exception as e:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+    elif mtext == '推薦品項':
+        sendCarousel(event)
+    elif mtext == '新品介紹':
+        try:
+            messages = [
+                StickerSendMessage(package_id='1', sticker_id='2'),
+                TextSendMessage(text="酷黑女王!\n\n口味\n極濃黑牛奶冰淇淋\n配料\n草莓+覆盆莓+小麻糬"),
+                ImageSendMessage(original_content_url="https://i.imgur.com/H253Dss.jpeg", preview_image_url="https://i.imgur.com/H253Dss.jpeg")
+            ]
+            line_bot_api.reply_message(event.reply_token, messages)
+        except Exception as e:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f'發生錯誤: {str(e)}'))
+            
+
 
 def handle_postback(event):
     backdata = dict(parse_qsl(event.postback.data))  # 取得 Postback 資料
